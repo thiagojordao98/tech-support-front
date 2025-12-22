@@ -1,0 +1,51 @@
+name: Deploy React to S3 & CloudFront
+
+on:
+  push:
+    tags:
+      - "front-*"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v3
+
+      - name: Acessar diretório do frontend
+        run: cd .
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Instalar dependências
+        run: |
+          pnpm install --frozen-lockfile
+        working-directory: .
+
+      - name: Build da aplicação
+        run: pnpm build
+        working-directory: .
+        env:
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+
+      - name: Upload para o S3
+        uses: jakejarvis/s3-sync-action@v0.5.1
+        with:
+          args: --delete
+        env:
+          AWS_S3_BUCKET: ${{ vars.AWS_S3_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: "us-east-1"
+          SOURCE_DIR: "dist"
+
+      - name: Invalidar cache do CloudFront
+        uses: chetan/invalidate-cloudfront-action@v2
+        env:
+          DISTRIBUTION: ${{ vars.DISTRIBUTION }}
+          PATHS: "/index.html"
+          AWS_REGION: "us-east-1"
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
