@@ -12,7 +12,7 @@ import {
 } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Plus, Pencil, Trash2, Save, X, Search } from "lucide-react";
-import { cn } from "@/lib/utils";
+// import { cn } from "@/lib/utils";
 
 export default function Admin() {
   const [items, setItems] = useState<KnowledgeBaseItem[]>([]);
